@@ -23,7 +23,7 @@
     </table>
     <script>
     $(function() {
-        $('#mhs-table').DataTable({
+        $('/mhs/store').DataTable({
             processing: true,
             serverSide: true,
             ajax: "{{ route('mhs.list')}}",

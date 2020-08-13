@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mahasiswa;
+use App\Prodi;
 use DataTables;
 use Illuminate\Http\Request;
 
@@ -20,11 +21,14 @@ class MahasiswaController extends Controller
 
     public function mhs_list()
     {
-        return Datatables::of(Mahasiswa::all())
-                ->removeColumn('id')
-                ->addIndexColumn()
-                ->make(true);
-    }
+        $mhs = Mahasiswa::with('mprodi')->get();
+        return Datatables::of($mhs)->addIndexColumn()->addColumn('action', function ($mhs) {
+        $action = '<a class="text-primary" href="/mhs/edit/'.$mhs->nim.'">Edit</a>';
+        $action .= ' | <a class="text-danger" href="/mhs/delete/'.$mhs->nim.'">Hapus</a>';
+        return $action;
+        })
+        ->make();
+        }
     /**
      * Show the form for creating a new resource.
      *
@@ -32,8 +36,11 @@ class MahasiswaController extends Controller
      */
     public function create()
     {
-        //
+        $prodi = Prodi::all();
+        return view('mahasiswa.create', compact('prodi'));
     }
+        //
+
 
     /**
      * Store a newly created resource in storage.
@@ -43,8 +50,16 @@ class MahasiswaController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+        'nim' => 'required|digits:10',
+        'nama_lengkap' => 'required',
+        ]);
+
+            Mahasiswa::create($request->all());
+            return redirect()->route('mhs.index')->with('success','Data berhasil ditambahkan');
     }
+        //
+
 
     /**
      * Display the specified resource.
@@ -63,10 +78,14 @@ class MahasiswaController extends Controller
      * @param  \App\Mahasiswa  $mahasiswa
      * @return \Illuminate\Http\Response
      */
-    public function edit(Mahasiswa $mahasiswa)
+    public function edit(Mahasiswa $mahasiswa, $id)
     {
-        //
+        $prodi = Prodi::all();
+        $mhs = Mahasiswa::find($id);
+        return view('mahasiswa.edit', compact('prodi', 'mhs'));
     }
+        //
+    
 
     /**
      * Update the specified resource in storage.
@@ -77,6 +96,11 @@ class MahasiswaController extends Controller
      */
     public function update(Request $request, Mahasiswa $mahasiswa)
     {
+        $request->validate([
+            'nama_lengkap' => 'required',
+            ]);
+            $mahasiswa->update($request->all());
+            return redirect()->route('mhs.index')->with('success','Data berhasil diupdate');
         //
     }
 
@@ -88,6 +112,8 @@ class MahasiswaController extends Controller
      */
     public function destroy(Mahasiswa $mahasiswa)
     {
+        $mahasiswa->delete();
+        return redirect()->route('mhs.index')->with('success','Data Berhasil Dihapus');
         //
     }
 }
